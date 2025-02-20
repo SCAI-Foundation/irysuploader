@@ -1,4 +1,4 @@
-# SciVault
+# SciBox
 
 A decentralized academic paper repository system built on Arweave/Irys.
 
