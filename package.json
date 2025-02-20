@@ -1,0 +1,32 @@
+{
+  "name": "scivault",
+  "version": "1.0.3",
+  "description": "A decentralized academic paper repository system built on Arweave/Irys",
+  "main": "0_generate_basic_metadata.js",
+  "scripts": {
+    "generate": "node 0_generate_basic_metadata.js",
+    "upload:basic": "node 1_upload_basic_metadata.js",
+    "upload:pdf": "node 2_upload_pdf.js",
+    "upload:all": "node 3_upload_all_metadata.js"
+  },
+  "dependencies": {
+    "@irys/upload": "^0.0.14",
+    "@irys/upload-solana": "^0.1.7",
+    "bignumber.js": "^9.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.17.1",
+    "node-fetch": "^2.7.0",
+    "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.16.0"
+  },
+  "keywords": [
+    "arweave",
+    "irys",
+    "academic",
+    "papers",
+    "decentralized"
+  ],
+  "author": "SciVault",
+  "license": "MIT"
+} 
