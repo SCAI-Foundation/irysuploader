@@ -1,4 +1,4 @@
-# SciBox
+# uploader for SciBox
 
 A decentralized academic paper repository system built on Arweave/Irys.
 
@@ -16,7 +16,7 @@ A decentralized academic paper repository system built on Arweave/Irys.
 1. Clone this repository:
    ```bash
    git clone https://github.com/yourusername/scivault.git
-   cd scivault
+   cd sciuploader
    ```
 
 2. Install dependencies:
