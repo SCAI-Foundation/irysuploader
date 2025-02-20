@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>scibox</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>scibox</h1>
+        <div class="search-box">
+            <select id="searchType">
+                <option value="doi">DOI</option>
+                <option value="title">Title</option>
+                <option value="aid">arXiv ID</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="input...">
+            <button onclick="search()">Search</button>
+        </div>
+        <div id="results" class="results">
+            <!-- 搜索结果将在这里显示 -->
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 

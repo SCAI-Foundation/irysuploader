@@ -76,14 +76,12 @@ async function uploadMetadata(jsonPath) {
             throw new Error("Failed to initialize Irys uploader");
         }
 
-        // 使用原始 metadata 数据作为上传内容
         const tags = [
             { name: "Content-Type", value: "metadata/json" },
             { name: "App-Name", value: "scivault" },
             { name: "Version", value: "1.0.3" }
         ];
 
-        // 将 metadata 中的所有字段添加为标签
         for (const [key, value] of Object.entries(metadata)) {
             if (value && typeof value === 'string') {
                 tags.push({ name: key, value: value });
