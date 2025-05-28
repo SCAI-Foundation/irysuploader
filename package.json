@@ -28,5 +28,14 @@
     "decentralized"
   ],
   "author": "SciVault",
-  "license": "MIT"
-} 
+  "license": "MIT",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Scihub-Community/sciuploader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Scihub-Community/sciuploader/issues"
+  },
+  "homepage": "https://github.com/Scihub-Community/sciuploader#readme"
+}
