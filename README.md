@@ -54,17 +54,11 @@ node 2_upload_pdf.js
 
 Note: If uploads fail due to network issues, you can safely run the script again. It will skip already uploaded files and continue with failed ones.
 
-### Step 3: Upload Complete Metadata
-
-Upload the complete metadata with all paper details:
-```bash
-node 3_upload_all_metadata.js
-```
 
 ## Version Control
 
 The system uses semantic versioning for content management:
-- Current version: `1.0.3`
+- Current version: `2.0.0`
 - Format: `MAJOR.MINOR.PATCH`
   - MAJOR: Breaking changes
   - MINOR: New features
