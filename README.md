@@ -15,7 +15,7 @@ A decentralized academic paper repository system built on Arweave/Irys.
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/scivault.git
+   git clone https://github.com/SciVault/sciuploader
    cd sciuploader
    ```
 
