@@ -1,86 +1,97 @@
-# uploader for SciBox
+# 📄 SciUploader – Bulk Sci-Hub PDF Downloader
 
-A decentralized academic paper repository system built on Arweave/Irys.
+This tool automates the batch download of academic papers from Sci-Hub using DOIs and organizes the PDFs for further metadata processing and decentralized storage (e.g., Arweave/Irys).
 
-## Prerequisites
+---
 
-1. Node.js (v16 or higher)
-2. Solana wallet with SOL tokens
-3. Create a `.env` file with your Solana private key:
-   ```
-   PRIVATE_KEY=your_solana_private_key_here
-   ```
+## 📦 Project Structure
 
-## Installation
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/SciVault/sciuploader
-   cd sciuploader
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-## Usage
-
-### Step 0: Prepare Your Data
-
-1. Create a `metadata` folder in the project root
-2. Place your metadata JSON files and corresponding PDFs in this folder
-   - Each PDF should have a matching JSON file with the same name (e.g., `paper1.pdf` and `paper1.json`)
-   - JSON files must contain a `doi` field
-3. Run the metadata generator:
-   ```bash
-   node 0_generate_basic_metadata.js
-   ```
-   This will create a `basic_metadata.json` file containing essential paper information.
-
-### Step 1: Upload Basic Metadata
-
-Upload the basic metadata (title, authors, DOI, etc.):
-```bash
-node 1_upload_basic_metadata.js
+```
+sciuploader/
+├── doi/                            ← Each page_N.json contains a list of DOIs
+├── pdf/                            ← Downloaded PDFs organized by page
+├── 0_run_workflow.js              ← Run full workflow script
+├── 1_fetch_all_dois.js            ← Fetch DOI list from external source
+├── 2_fetch_all_pdfs.js            ← Download PDFs using DOI list
+├── 3_generate_basic_metadata.js   ← Generate basic metadata JSON
+├── 4_upload_all_basic_metadata.js ← Upload metadata to decentralized storage (TBD)
+├── 5_upload_all_pdfs.js           ← Upload PDFs to decentralized storage (TBD)
+├── 9_fund.js                      ← Funding registration or helper functions
+├── .env.example                   ← Example environment configuration
+└── README.md                      ← This file
 ```
 
-### Step 2: Upload PDFs
+---
 
-Upload PDFs (they will be automatically split into chunks):
+## ✅ How to Use
+
+### 1. Install dependencies
+
 ```bash
-node 2_upload_pdf.js
+npm install
 ```
 
-Note: If uploads fail due to network issues, you can safely run the script again. It will skip already uploaded files and continue with failed ones.
+### 2. Set environment variables (optional)
+
+Copy `.env.example` to `.env` and fill in any required values (e.g., upload keys for later stages).
+
+---
+
+### 3. Run full workflow
+
+```bash
+node 0_run_workflow.js
+```
+
+for dividing tasks,
+add --start-page=3 --end-page=4 like this, there are total 883431 pages
+
+```bash
+node 0_run_workflow.js --start-page=3 --end-page=4
+```
 
 
-## Version Control
+Or run step-by-step:
 
-The system uses semantic versioning for content management:
-- Current version: `2.0.0`
-- Format: `MAJOR.MINOR.PATCH`
-  - MAJOR: Breaking changes
-  - MINOR: New features
-  - PATCH: Bug fixes
+---
 
-When uploading content, ensure you're using the correct version in the tags.
+### ◾️ Step 1: Fetch all DOIs (optional)
 
-## Error Handling
+```bash
+node 1_fetch_all_dois.js
+```
 
-- Each upload script generates detailed logs:
-  - `upload_report.json`: Summary of upload results
-  - `upload_errors.json`: Details of failed uploads
-- Failed uploads can be retried by running the script again
-- The system checks for existing uploads to avoid duplicates
+This fetches DOIs from an API and saves them into `doi/page_N.json` files.
 
-## Web Interface
+---
 
-The `queryweb` folder contains a simple web interface for searching and viewing papers:
-- Search by DOI, title, or arXiv ID
-- View paper metadata
-- Download PDF files
+### ◾️ Step 2: Download all PDFs
 
-## License
+```bash
+node 2_fetch_all_pdfs.js --start-page=1 --end-page=10
+```
 
-MIT
+- Failed downloads are logged to `failed_log_page_N.txt` per page.
+- Already downloaded and valid files are skipped.
+
+---
+
+### ◾️ Step 3: Generate basic metadata
+
+```bash
+node 3_generate_basic_metadata.js
+```
+
+---
+
+### ◾️ Step 4 & 5: Upload 
+
+```bash
+node 4_upload_all_basic_metadata.js
+node 5_upload_all_pdfs.js
+```
+---
+
+## 📜 License
+
+MIT 
