@@ -1,6 +1,6 @@
 # 📄 SciUploader – Bulk Sci-Hub PDF Downloader
 
-This tool automates the batch download of academic papers from Sci-Hub using DOIs and organizes the PDFs for further metadata processing and decentralized storage (e.g., Arweave/Irys).
+This tool automates the batch download of academic papers from Sci-Hub using DOIs and organizes the PDFs for further metadata processing and decentralized storage Irys.
 
 ---
 
