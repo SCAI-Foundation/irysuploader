@@ -92,6 +92,8 @@ async function uploadOnePdf(irys, filePath) {
 
     const receipt = await irys.upload(buffer, { tags });
     console.log(`✅ Uploaded ${doi} - ${receipt.id}`);
+
+
     return { status: "ok", doi, id: receipt.id };
   } catch (error) {
     console.error(`❌ Failed upload: ${filePath} - ${error.message}`);
@@ -114,7 +116,16 @@ async function processPageFolder(irys, pageDir) {
     const filePath = path.join(pageDir, file);
     const res = await uploadOnePdf(irys, filePath);
 
-    if (res.status === "ok") result.ok.push(res);
+
+    // 在 uploadOnePdf 函数中，上传成功后添加：
+    if (res.status === "ok") {
+      result.ok.push(res);
+      // 删除本地 PDF 文件
+      await fs.unlink(filePath);
+      console.log(`🗑️ Deleted local file: ${filePath}`);
+    }
+
+    // if (res.status === "ok") result.ok.push(res);
     else if (res.status === "fail") result.fail.push(res);
     else if (res.status === "skip") result.skip.push(res);
 

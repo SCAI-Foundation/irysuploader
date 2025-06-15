@@ -6,7 +6,7 @@ const axios = require('axios');
 // === Configuration ===
 const DOI_DIR = './doi';
 const PDF_DIR = './pdf';
-const SCI_HUB_MIRRORS = [
+const DEFAULT_SCI_HUB_MIRRORS = [
   'https://sci-hub.st/',
   'https://sci-hub.se/',
   'https://sci-hub.ru/',
@@ -14,6 +14,7 @@ const SCI_HUB_MIRRORS = [
 ];
 const DELAY_MS = 3000;
 const MIN_VALID_SIZE = 1024;
+const RETRY_ATTEMPTS = 3;
 
 // === CLI Argument Parser ===
 const args = process.argv.slice(2);
@@ -32,72 +33,110 @@ function ensureDir(dirPath) {
 }
 
 async function downloadPdfFromUrl(url, filePath) {
-  try {
-    const writer = fs.createWriteStream(filePath);
-    const response = await axios({
-      url,
-      method: 'GET',
-      responseType: 'stream',
-      httpsAgent: new https.Agent({ rejectUnauthorized: false })
-    });
-
-    response.data.pipe(writer);
-    return new Promise((resolve, reject) => {
-      writer.on('finish', () => {
-        const stats = fs.statSync(filePath);
-        if (stats.size >= MIN_VALID_SIZE) {
-          console.log(`✅ Downloaded: ${url}`);
-          resolve(true);
-        } else {
-          fs.unlinkSync(filePath);
-          console.warn(`❌ Download too small: ${url}`);
-          resolve(false);
-        }
+  for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
+    try {
+      console.log(`📥 开始下载 (尝试 ${attempt}): ${url} -> ${filePath}`);
+      const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'arraybuffer',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'application/pdf',
+        },
+        httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+        timeout: 10000,
       });
-      writer.on('error', reject);
+
+      fs.writeFileSync(filePath, response.data);
+      const stats = fs.statSync(filePath);
+      if (stats.size >= MIN_VALID_SIZE) {
+        console.log(`✅ 成功下载: ${url}`);
+        return true;
+      } else {
+        fs.unlinkSync(filePath);
+        console.warn(`❌ 下载文件太小: ${url}`);
+        return false;
+      }
+    } catch (err) {
+      console.error(`❌ 下载失败 (尝试 ${attempt}): ${url} - ${err.message}`);
+      if (attempt < RETRY_ATTEMPTS) await sleep(1000);
+    }
+  }
+  return false;
+}
+
+async function getSciHubUrls() {
+  try {
+    const url = 'https://www.sci-hub.pub';
+    console.log(`📡 正在获取 Sci-Hub 镜像列表: ${url}`);
+    const response = await axios.get(url, {
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+      timeout: 10000,
     });
+    const html = response.data;
+    const pattern = /<a[^>]*href="([^"]+)"[^>]*>/gi;
+    const matches = [];
+    let match;
+    while ((match = pattern.exec(html)) !== null) {
+      const href = match[1];
+      if (href.includes('sci-hub') && href.startsWith('http')) {
+        matches.push(href.endsWith('/') ? href : `${href}/`);
+      }
+    }
+    matches.push('https://www.tesble.com/');
+    console.log(`📡 获取的 Sci-Hub 镜像: ${matches.join(', ')}`);
+    return matches.length > 0 ? matches : DEFAULT_SCI_HUB_MIRRORS;
   } catch (err) {
-    console.error(`❌ Download failed: ${url}`, err.message);
-    return false;
+    console.error(`❌ 获取 Sci-Hub 镜像失败: ${err.message}`);
+    return DEFAULT_SCI_HUB_MIRRORS;
   }
 }
 
 async function extractPdfLinkAndDownload(doi, mirror, outputPath) {
-  try {
-    const url = mirror + encodeURIComponent(doi);
-    const response = await axios.get(url, { httpsAgent: new https.Agent({ rejectUnauthorized: false }) });
-    const html = response.data;
+  for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
+    try {
+      const url = mirror + encodeURIComponent(doi);
+      console.log(`🔍 访问 Sci-Hub (尝试 ${attempt}): ${url}`);
+      const response = await axios.get(url, {
+        httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+        timeout: 10000,
+      });
+      const html = response.data;
 
-    const embedMatch = html.match(/<embed[^>]*src=["']([^"']+\.pdf[^"']*)["']/i);
-    if (!embedMatch || !embedMatch[1]) {
-      console.warn(`❌ No PDF embed found for ${doi}`);
-      return false;
+      const embedMatch = html.match(/<embed[^>]*src=["']([^"']+\.pdf[^"']*)["']/i);
+      if (!embedMatch || !embedMatch[1]) {
+        console.warn(`❌ 未找到 PDF embed 标签: ${doi}`);
+        return null;
+      }
+
+      let pdfUrl = embedMatch[1];
+      if (pdfUrl.startsWith('//')) {
+        pdfUrl = 'https:' + pdfUrl;
+      } else if (!pdfUrl.startsWith('http')) {
+        pdfUrl = mirror + (pdfUrl.startsWith('/') ? pdfUrl.slice(1) : pdfUrl);
+      }
+
+      const success = await downloadPdfFromUrl(pdfUrl, outputPath);
+      return success ? true : null;
+    } catch (err) {
+      console.warn(`❌ 抓取 ${mirror} 的 ${doi} 失败 (尝试 ${attempt}): ${err.message}`);
+      if (attempt < RETRY_ATTEMPTS) await sleep(1000);
     }
-
-    let pdfUrl = embedMatch[1];
-    if (pdfUrl.startsWith('//')) {
-      pdfUrl = 'https:' + pdfUrl;
-    } else if (!pdfUrl.startsWith('http')) {
-      pdfUrl = mirror + (pdfUrl.startsWith('/') ? pdfUrl.slice(1) : pdfUrl);
-    }
-
-    return await downloadPdfFromUrl(pdfUrl, outputPath);
-  } catch (err) {
-    console.warn(`❌ Error scraping ${mirror} for ${doi}: ${err.message}`);
-    return false;
   }
+  return null;
 }
 
-async function tryAllMirrors(doi, outputPath) {
-  for (const mirror of SCI_HUB_MIRRORS) {
-    const success = await extractPdfLinkAndDownload(doi, mirror, outputPath);
-    if (success) return true;
+async function tryAllMirrors(doi, outputPath, sciHubUrls) {
+  for (const mirror of sciHubUrls) {
+    const result = await extractPdfLinkAndDownload(doi, mirror, outputPath);
+    if (result === true) return true;
     await sleep(1000);
   }
   return false;
 }
 
-async function processPage(pageFile) {
+async function processPage(pageFile, sciHubUrls) {
   const pageNum = pageFile.match(/\d+/)[0];
   const doiPath = path.join(DOI_DIR, pageFile);
   const outDir = path.join(PDF_DIR, `page_${pageNum}`);
@@ -118,24 +157,23 @@ async function processPage(pageFile) {
     if (fs.existsSync(pdfPath)) {
       const stats = fs.statSync(pdfPath);
       if (stats.size >= MIN_VALID_SIZE) {
-        console.log(`✅ Already exists: ${pdfPath}`);
+        console.log(`✅ PDF 已存在: ${pdfPath}`);
         continue;
-      } else {
-        console.warn(`⚠️ Removing invalid file: ${pdfPath}`);
-        fs.unlinkSync(pdfPath);
       }
+      console.warn(`⚠️ 删除无效 PDF: ${pdfPath}`);
+      fs.unlinkSync(pdfPath);
     }
 
     if (failedDois.has(doi)) {
-      console.log(`⚠️ Previously failed: ${doi}, skipping`);
+      console.log(`⚠️ 之前失败，跳过: ${doi}`);
       continue;
     }
 
-    console.log(`📄 Downloading DOI: ${doi}`);
-    const success = await tryAllMirrors(doi, pdfPath);
+    console.log(`📄 处理 DOI: ${doi}`);
+    const success = await tryAllMirrors(doi, pdfPath, sciHubUrls);
     if (!success) {
       fs.appendFileSync(failedLogPath, `${doi}\n`);
-      console.error(`❌ Failed to download ${doi}`);
+      console.error(`❌ 下载 ${doi} 失败`);
     }
 
     await sleep(DELAY_MS);
@@ -144,6 +182,8 @@ async function processPage(pageFile) {
 
 async function main() {
   ensureDir(PDF_DIR);
+
+  const sciHubUrls = await getSciHubUrls();
 
   const pageFiles = fs.readdirSync(DOI_DIR)
     .filter(f => f.startsWith('page_') && f.endsWith('.json'))
@@ -155,11 +195,11 @@ async function main() {
   });
 
   for (const file of filtered) {
-    console.log(`\n=== Processing ${file} ===`);
-    await processPage(file);
+    console.log(`\n=== 处理 ${file} ===`);
+    await processPage(file, sciHubUrls);
   }
 
-  console.log('\n🎉 All requested PDF downloads finished.');
+  console.log('\n🎉 所有请求的 PDF 下载完成。');
 }
 
 main();
