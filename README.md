@@ -47,7 +47,7 @@ for dividing tasks,
 add --start-page=3 --end-page=4 like this, there are total 883431 pages
 
 ```bash
-node 0_run_workflow.js --start-page=300000 --end-page=400000 --batch-size=10
+node 0_run_workflow.js --start-page=300000 --end-page=400000
 ```
 
 
