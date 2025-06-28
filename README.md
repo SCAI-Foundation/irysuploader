@@ -24,7 +24,7 @@ sciuploader/
 ---
 
 
-## 新增运行脚本
+## add run_uploader.sh to run the workflow
 ```bash
 ./run_uploader.sh --start-page=300000 --end-page=400000
 ```
