@@ -26,7 +26,7 @@ sciuploader/
 
 ## add run_uploader.sh to run the workflow
 ```bash
-curl -sSL https://raw.githubusercontent.com/SCAI-Foundation/irysuploader/main/run_uploader.sh | bash -s -- --start-page=300000 --end-page=400000
+curl -sSL https://raw.githubusercontent.com/SCAI-Foundation/irysuploader/main/run_uploader.sh | bash -s -- --start-page=300000 --end-page=400000 -- --start-page=500000 --end-page=600000
 ```
 
 
