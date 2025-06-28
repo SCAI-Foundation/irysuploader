@@ -74,7 +74,7 @@ echo -e "\n${YELLOW}[步骤 4/7] 正在准备项目仓库...${NC}"
 if [ ! -d "$REPO_DIR" ]; then
     echo "项目目录 '$REPO_DIR' 不存在，正在从 GitHub 克隆..."
     git clone "$REPO_URL"
-    if [ $? -ne 0 ]; then
+    if ! git clone "$REPO_URL"; then
         echo -e "${RED}错误: 'git clone' 失败。${NC}"; exit 1;
     fi
 else
@@ -88,8 +88,7 @@ echo -e "\n${YELLOW}[步骤 5/7] 正在安装 Node.js 项目依赖包...${NC}"
 cd "$REPO_DIR" || exit 1
 echo "当前目录: $(pwd)"
 echo "执行 'npm install'..."
-npm install >/dev/null 2>&1
-if [ $? -ne 0 ]; then
+if ! npm install >/dev/null 2>&1; then
     echo -e "${RED}错误: 'npm install' 失败。${NC}"; exit 1;
 fi
 echo -e "${GREEN}Node.js 项目依赖包安装完成。${NC}"
@@ -138,8 +137,9 @@ PM2_PROCESS_NAME_1="irys-uploader-1"
 echo "正在启动进程 1: $PM2_PROCESS_NAME_1"
 echo "参数: ${ARGS1[*]}"
 pm2 delete "$PM2_PROCESS_NAME_1" >/dev/null 2>&1 || true
-pm2 start "$NODE_SCRIPT" --name "$PM2_PROCESS_NAME_1" -- ${ARGS1[@]}
-if [ $? -ne 0 ]; then echo -e "${RED}进程1启动失败!${NC}"; exit 1; fi
+if ! pm2 start "$NODE_SCRIPT" --name "$PM2_PROCESS_NAME_1" -- "${ARGS1[@]}"; then
+    echo -e "${RED}进程1启动失败!${NC}"; exit 1;
+fi
 
 # 启动第二个进程 (如果提供了参数)
 if [ ${#ARGS2[@]} -gt 0 ]; then
@@ -147,8 +147,9 @@ if [ ${#ARGS2[@]} -gt 0 ]; then
     echo "正在启动进程 2: $PM2_PROCESS_NAME_2"
     echo "参数: ${ARGS2[*]}"
     pm2 delete "$PM2_PROCESS_NAME_2" >/dev/null 2>&1 || true
-    pm2 start "$NODE_SCRIPT" --name "$PM2_PROCESS_NAME_2" -- ${ARGS2[@]}
-    if [ $? -ne 0 ]; then echo -e "${RED}进程2启动失败!${NC}"; exit 1; fi
+    if ! pm2 start "$NODE_SCRIPT" --name "$PM2_PROCESS_NAME_2" -- "${ARGS2[@]}"; then
+        echo -e "${RED}进程2启动失败!${NC}"; exit 1;
+    fi
 fi
 
 # --- 完成 ---
