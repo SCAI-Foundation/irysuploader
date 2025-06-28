@@ -23,6 +23,13 @@ sciuploader/
 
 ---
 
+
+## 新增运行脚本
+```bash
+./run_uploader.sh --start-page=300000 --end-page=400000
+```
+
+
 ## ✅ How to Use
 
 ### 1. Install dependencies
@@ -84,7 +91,7 @@ node 3_generate_basic_metadata.js
 
 ---
 
-### ◾️ Step 4 & 5: Upload 
+### ◾️ Step 4 & 5: Upload
 
 ```bash
 node 4_upload_all_basic_metadata.js
@@ -94,4 +101,4 @@ node 5_upload_all_pdfs.js
 
 ## 📜 License
 
-MIT 
+MIT
